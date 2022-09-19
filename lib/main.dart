@@ -1,9 +1,41 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, avoid_print
 ////파란 줄을 없애기 위한 빠른 수정
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_database/firebase_database.dart'; //파이어베이스DB
+import 'package:firebase_core/firebase_core.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // await Firebase.initializeApp(
+  //   options: const FirebaseOptions(
+  //     apiKey: 'AIzaSyDSpe4swtoP3Yj6BCkwhVXqBYwueiMkdas',
+  //     appId: '1:781983802194:android:a9e27819be416fe04cd08b',
+  //     messagingSenderId: '781983802194',
+  //     projectId: 'testsnslogin-d3f6a',
+  //     databaseURL:
+  //         'https://testsnslogin-d3f6a-default-rtdb.asia-southeast1.firebasedatabase.app/',
+  //   ),
+  // );
+await Firebase.initializeApp();
+  // if (!kIsWeb) {
+  //   await Firebase.initializeApp();
+  // } else {
+  //   await Firebase.initializeApp(
+  //     options: const FirebaseOptions(
+  //       apiKey: 'AIzaSyAgUhHU8wSJgO5MVNy95tMT07NEjzMOfz0',
+  //       appId: '1:448618578101:web:0b650370bb29e29cac3efc',
+  //       messagingSenderId: '448618578101',
+  //       projectId: 'react-native-firebase-testing',
+  //       authDomain: 'react-native-firebase-testing.firebaseapp.com',
+  //       databaseURL: 'https://react-native-firebase-testing.firebaseio.com',
+  //       storageBucket: 'react-native-firebase-testing.appspot.com',
+  //       measurementId: 'G-F79DJ0VFGS',
+  //     ),
+  //   );
+  // }
+
   runApp(const MyApp());
 }
 
@@ -65,8 +97,34 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  Future<void> createData() async {
+    var postId = "123";
+
+    DatabaseReference ref = FirebaseDatabase.instance.ref("Users/$postId");
+
+    await ref.set({
+      "name": "Thomas",
+      "age": 23,
+      "address": {"line1": "100 Mountain View"}
+    });
+
+    await ref.update({
+      "age": 24,
+      "address/line1": "222 Mountain View",
+    });
+
+    ref.onValue.listen((DatabaseEvent event) {
+      //final data = event.snapshot.value;
+      //updateStarCount(data); //아마 이부분을 따로 함수로 만들고 클릭시 호출, 이벤트로 데이터 변경하는거인듯?
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    //FirebaseDatabase database = FirebaseDatabase.instance; //파이어베이스DB
+
+    createData();
+
     return Scaffold(
       //도화지
       appBar: AppBar(
