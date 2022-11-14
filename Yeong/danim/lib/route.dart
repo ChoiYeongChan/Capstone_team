@@ -6,71 +6,65 @@ import "package:http/http.dart" as http;
 String apiKEY='AIzaSyD0em7tm03lJXoj4TK47TcunmqfjDwHGcI';
 String apiURL='https://maps.googleapis.com/maps/api/directions/json?';
 String drivingURL='https://naveropenapi.apigw.ntruss.com/map-direction/v1/driving?';
-/*
-int sta2=0;
-double a=127.009686;
-double b=37.507941;
-double c=126.977977;
-double d=37.302263;
-*/
-/*
-Future<String> getDrivingDuration(String origin, String destination) async {
-  String drivingDuration='';
-  http.Response response = await http.get(Uri.parse(
-      '${apiURL}origin=$origin&destination=$destination&mode=driving&departure_time=now&language=ko&key=$apiKEY'
-  ),
-  );
-  if (response.statusCode < 200 || response.statusCode > 400) {
-    drivingDuration='-1';
-    return drivingDuration; // 오류시 -1 리턴
-  } else {
-    String responseData = utf8.decode(response.bodyBytes);
-    var responseBody = jsonDecode(responseData);
-    drivingDuration = responseBody["routes"][0]["legs"][0]["duration"]["value"].toString();
-  }
-  return drivingDuration;
-}*/
 
-Future<String> getDrivingDuration(double originLng, double originLat, double destinationLng, double destinationLat) async {
-  String drivingDuration='';
+class TransitTime{
+  int transitDuration=0;
+  String transitSteps='';
+
+  TransitTime(
+      this.transitDuration,
+      this.transitSteps
+      );
+}
+
+Future<int> getDrivingDuration(double originLat, double originLng, double destinationLat, double destinationLng) async {
+  int drivingDuration=0;
   http.Response response = await http.get(Uri.parse(
       '${drivingURL}start=$originLng,$originLat&goal=$destinationLng,$destinationLat&option=trafast'
   ),headers: {"X-NCP-APIGW-API-KEY-ID": "piv474r6sz",
     "X-NCP-APIGW-API-KEY": "Ugcq7WpbmUSu010hzNpE4bFFXO1E3Ds983KBKwSI"}
   );
   if (response.statusCode < 200 || response.statusCode > 400) {
-    drivingDuration=response.statusCode.toString();
-    return drivingDuration; // 오류시 -1 리턴
+    return -1; // 오류시 -1 리턴
   } else {
     String responseData=utf8.decode(response.bodyBytes);
     var responseBody=jsonDecode(responseData);
-
-    drivingDuration=(responseBody['route']['trafast'][0]['summary']['duration'].toString());
+    drivingDuration=(responseBody['route']['trafast'][0]['summary']['duration']);
+    drivingDuration=(((drivingDuration/60000).ceil()+9)/10).floor()*10;
   }
   return drivingDuration;
 }
 
-Future<String> getTransitDuration(String origin, String destination) async {
-  String transitDuration='';
+Future<TransitTime> getTransitDuration(double originLat, double originLng, double destinationLat, double destinationLng) async {
+  String transitSteps='';
+  int transitDuration=0;
   http.Response response = await http.get(Uri.parse(
-      '${apiURL}origin=$origin&destination=$destination&mode=transit&departure_time=now&language=ko&key=$apiKEY'
+      '${apiURL}origin=$originLat,$originLng&destination=$destinationLat,$destinationLng&mode=transit&departure_time=now&language=ko&key=$apiKEY'
   ),
   );
   if (response.statusCode < 200 || response.statusCode > 400) {
-    transitDuration='-1';
-    return transitDuration; // 오류시 -1 리턴
+    return TransitTime(-1,'Error'); // 오류시 -1 리턴
   } else {
     String responseData = utf8.decode(response.bodyBytes);
     var responseBody = jsonDecode(responseData);
-    transitDuration = responseBody["routes"][0]["legs"][0]["duration"]["value"].toString();
+    String status=responseBody["status"];
+    if(status=="ZERO_RESULTS") {
+      transitSteps="이동경로가 없습니다.";
+      transitDuration=((await getDrivingDuration(originLat, originLng, destinationLat, destinationLng))*1.5).round();
+    }
+    else {
+      transitDuration = responseBody["routes"][0]["legs"][0]["duration"]["value"];
+      transitDuration=(((transitDuration/60).ceil()+9)/10).floor()*10;
+      transitSteps=await getTransitSteps(originLat, originLng, destinationLat, destinationLng);
+    }
   }
-  return transitDuration;
+  return TransitTime(transitDuration, transitSteps);
 }
 
-Future<String> getTransitSteps(String origin, String destination) async {
+Future<String> getTransitSteps(double originLat, double originLng, double destinationLat, double destinationLng) async {
   String transitSteps='';
   http.Response response = await http.get(Uri.parse(
-      '${apiURL}origin=$origin&destination=$destination&mode=transit&departure_time=now&language=ko&key=$apiKEY'
+      '${apiURL}origin=$originLat,$originLng&destination=$destinationLat,$destinationLng&mode=transit&departure_time=now&language=ko&key=$apiKEY'
   ),
   );
   if (response.statusCode < 200 || response.statusCode > 400) {

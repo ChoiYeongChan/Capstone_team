@@ -43,6 +43,24 @@ void addMarker (String placeName, double lat, double lng) {
     infoWindow: placeName,
   ));
 }
+void restMarker(){
+  for(int i=0;i<restaurantList.length;i++){
+    markers.add(Marker(
+      markerId: restaurantList[i].restName,
+      position: LatLng(restaurantList[i].restLat,restaurantList[i].restLong),
+      infoWindow: restaurantList[i].restCategory,
+    ));
+  }
+}
+void cafeMarker(){
+  for(int i=0;i<cafeList.length;i++){
+    markers.add(Marker(
+      markerId: cafeList[i].cafeName,
+      position: LatLng(cafeList[i].cafeLat,cafeList[i].cafeLong),
+      infoWindow: cafeList[i].cafeCategory,
+    ));
+  }
+}
 void addPoly(){
   pathOverlays.add(PathOverlay(PathOverlayId('path'),latLen,color: Colors.pink,width: 7,outlineWidth: 0));
 }
@@ -126,9 +144,9 @@ class NaverMapState extends State<Map> {
           //addRestMarker();
           //addCafeMarker();
           //addAccommodationMarker();
-          getRestaurant(lat, lang);
-          getCafe(lat, lang);
-          getAccommodation(lat, lang);
+          //getRestaurant(lat, lang);
+          //getCafe(lat, lang);
+          //getAccommodation(lat, lang);
           addMarker(placeName,lat,lang);
           addPoly();
           });
